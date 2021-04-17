@@ -36,7 +36,12 @@ const resolver : Resolvers = {
     query : {
         async movie([id, picks] : any, context : any){
             return pick(await testData.filter(row=>row.id==id)[0], picks)
-        }   
+        },
+        hello : ([names]) => {
+            console.log(names);
+            
+            return 'world'
+        }
     },
     update : {
         async addMovie([data] : any, context : any){
@@ -56,7 +61,9 @@ const types = {
         title : string,
         actors : Schema.either(array.of(string), string),
         releaseDate : string
-    }
+    },
+
+    hello : string
 }
 
 
@@ -65,8 +72,12 @@ const sql = new Slashql(resolver, types)
 
 
 sql.process({
+    $ :{
+        names : ['x', 'd', 'c']
+    },
     query : {
-        movie : [0, ["title", "actors", "id"]]
+        movie : [0, ["title", "actors", "id"]],
+        hello : ['$names']
     },
     update : {
         addMovie : [{
