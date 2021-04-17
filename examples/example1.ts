@@ -3,7 +3,7 @@
  * Example on nested queries in slash
  */
 
-import Slashql, { string, number, $number, array, Resolvers, Schema } from '../index.ts'
+import Slashql, { string, number, $number, array, Resolvers, Schema } from '../mod.ts'
 
 //? We will make use of `pick` function of lodash
 
@@ -34,9 +34,18 @@ const testData = [
 
 const resolver : Resolvers = {
     query : {
-        async movie([id, picks], context){
+        async movie([id, picks] : any, context : any){
             return pick(await testData.filter(row=>row.id==id)[0], picks)
         }   
+    },
+    update : {
+        async addMovie([data] : any, context : any){
+            testData.push({
+                ...data,
+                id : testData.length
+            })
+            return testData
+        }
     }
 }
 
@@ -58,6 +67,11 @@ const sql = new Slashql(resolver, types)
 sql.process({
     query : {
         movie : [0, ["title", "actors", "id"]]
+    },
+    update : {
+        addMovie : [{
+            title : 'Hola'
+        }]
     }
 }, {})
 .then(e=>{

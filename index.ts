@@ -66,7 +66,7 @@ import Schema, {
             let elChecker = Schema(self.types[element], {strict : true}).destruct()
             let elArgs = self.evalArgs(query[element], vars)
             let elResult = await (self.resolvers.query as any)[element](elArgs, ctx)
-            //@ts-expect-error
+            //-@ts-expect-error
             let [err, success] = elChecker(elResult);
             if(err)rej({ error : true, at : current, message : err })
             result[element] = elResult
@@ -81,6 +81,38 @@ import Schema, {
         }
         res(result)
       });
+    }
+
+    private async processUpdate(q: any, ctx: any){
+      return new Promise(async (res, rej) => {
+        const self = this;
+        let query = q.update,
+          vars = q.$,
+          current = "update",
+          result : any = {};
+        if (!(typeof query == "object" && !("length" in query))) { rej({ error: true, at: current, message: "update should be an object", }); }
+        if (!Object.keys(query).length)rej({ error : true, at : current, message : `update can't be empty` })
+        for (let element in query) {
+          current = element;
+          if (!(element in (self.resolvers.update as any))) { rej({ error: true, at: current, message: `${element} is not defined in types`, }); }
+  
+          try{
+            
+            let elArgs = self.evalArgs(query[element], vars)
+            let elResult = await (self.resolvers.update as any)[element](elArgs, ctx)
+            result[element] = elResult
+          }catch(err){
+            rej({
+              error : true,
+              at : current,
+              message : err
+            })
+            
+          }
+        }
+        res(result)
+      });
+  
     }
   
     async process(query: any, context: any) {
@@ -107,7 +139,12 @@ import Schema, {
         }
   
   
-        //! UPDATE IS NOT IMPLEMENTED YET
+        if(q?.update){
+          result["result"] = await this.processUpdate ({
+            update : q.update,
+            $ : q.$
+          }, context).catch(err=>rej(err))
+        }
   
   
         res(result);
