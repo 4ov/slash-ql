@@ -1,6 +1,6 @@
 {
-  "name": "esql",
-  "version": "1.0.0",
+  "name": "slashql",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
